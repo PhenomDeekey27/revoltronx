@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const Sample = () => {
   const [SearchTerm, setSearchTerm] = useState("");
@@ -25,20 +25,27 @@ const Sample = () => {
   const getAllArticles = async (SearchTerm) => {
     try {
   
-      const response = await axios.get(
-        `https://newsapi.org/v2/everything?q=${SearchTerm}&pageSize=10&apiKey=2d25cb9733964bc996b1b08f6911b80d`
-      );
+      const url = `https://www.googleapis.com/customsearch/v1`;
+      const params = {
+        q: `${SearchTerm} + articles`,
+        cx: import.meta.env.VITE_SEARCHID,
+        key: import.meta.env.VITE_API_KEY,
+        num: 10,
+        siteSearch: "medium.com",
+      };
+      const response = await axios.get(url, { params });
       
+
       
-      setArticles(formatArticles(response?.data?.articles))
-      console.log(articles,"Main")
-      setOriginalArticles(response?.data?.articles);
-      console.log(response?.data?.articles,"original data") // Save the original articles
-      if (response.data.status === "ok") {
+      setArticles(formatArticles(response?.data?.items))
+      
+      setOriginalArticles(response?.data?.items);
+     // Save the original articles
+     
         toast.success("Articles fetched Successfully");
-      }
+      
     } catch (error) {
-      console.log(error);
+      
       toast.error(error);
     }
   };
@@ -56,36 +63,44 @@ const Sample = () => {
       const response = await axios.get(url, { params });
    
       setBlogs(formatBlogs(response.data?.items)); // Set formatted blogs
-      setOriginalBlogs(formatBlogs(response.data?.items)); // Save the original blogs
+      setOriginalBlogs(formatBlogs(response.data?.items));
+      toast.success("Blogs Fetched successfully") // Save the original blogs
     } catch (error) {
-      console.log(error);
+     
       toast.error(error);
     }
   };
 
   const getAllVideos = async (SearchTerm) => {
-    const response = await axios.get(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${SearchTerm}&type=video&key=${import.meta.env.VITE_API_KEY}`
-    );
-
-    const formattedVideos = formatVideos(response.data?.items);
-    setVideos(formattedVideos);
-    setOriginalVideos(formattedVideos); // Save the original videos
+    try {
+      const response = await axios.get(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${SearchTerm}&type=video&key=${import.meta.env.VITE_API_KEY}`
+      );
+  
+      const formattedVideos = formatVideos(response.data?.items);
+      setVideos(formattedVideos);
+      setOriginalVideos(formattedVideos);
+      toast.success("Youtube Videos Fetched successfully") 
+      
+    } catch (error) {
+      toast.error(error)
+      
+    }
+  // Save the original videos
   
   };
 
   const formatArticles = (items) => {
-    console.log(items,"passedOne")
+   
 
    
     return items.map(item => ({
         
       title: item.title,
-      url: item.url,
-      image:item.urlToImage,
-      author: item.author || "Unknown Author",
-      description: item.description || "No description available",
-      date: item?.publishedAt?.split("T")[0]
+      url: item.link,
+      snippet: item.snippet,
+      date: item.htmlSnippet?.split("<b>")[0], // Extract the date
+      img: item.pagemap?.cse_image?.[0]?.src || "default-image-url.jpg",
     }
     )
 )
@@ -134,6 +149,7 @@ const Sample = () => {
 
   return (
     <div>
+    <Toaster></Toaster>
     
       <div className="flex items-center justify-center gap-4 mt-6">
         <input
@@ -168,14 +184,14 @@ const Sample = () => {
       
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
           {articles.map((item, index) => {
-            const formattedArticle = formatArticles([item])[0];
+          
             return (
-              <a href={formattedArticle.url} target="_blank" rel="noopener noreferrer" className="block w-full" key={index} data-aos="fade-left">
+              <a href={item.url} target="_blank" rel="noopener noreferrer" className="block w-full" key={index} data-aos="fade-left">
                 <div className="bg-slate-300 p-4 flex flex-col items-center justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[350px] h-[500px] mx-auto">
                   {/* Image */}
                   <div className="w-full h-[300px] flex items-center justify-center overflow-hidden rounded-md">
                     <img
-                      src={item?.image}
+                      src={item?.img}
                       alt="Article Image"
                       className="object-cover w-full h-full"
                     />
@@ -183,13 +199,13 @@ const Sample = () => {
 
                   {/* Title */}
                   <h1 className="text-2xl p-1 text-blue-800 font-semibold text-center mt-2 mb-2">
-                    {formattedArticle.title}
+                    {item.title}
                   </h1>
 
                   {/* Description */}
                   <div className="p-2 flex-1 flex flex-col justify-between text-center">
-                    <p className="text-sm">by <span className="ml-1 italic text-green-600">{formattedArticle.author}</span></p>
-                    <p className="text-base line-clamp-4 mt-2">{formattedArticle.description}</p>
+                    <p className="text-sm">by <span className="ml-1 italic text-green-600">{item.author}</span></p>
+                    <p className="text-base line-clamp-4 mt-2">{item.snippet}</p>
 
                     {/* Read more link */}
                     <p className="text-blue-700 font-semibold mt-4">Click here to read more...</p>
@@ -197,7 +213,7 @@ const Sample = () => {
 
                   {/* Published Date */}
                   <div className="w-full text-right">
-                    <h2 className="text-red-600 text-sm">{formattedArticle.date}</h2>
+                    <h2 className="text-red-600 text-sm">{item.date}</h2>
                   </div>
                 </div>
               </a>
