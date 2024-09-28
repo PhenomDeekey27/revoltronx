@@ -1,6 +1,9 @@
 import axios from "axios";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import Lottie from "lottie-react";
+
+import user from "../assets/user.json";
 
 const Sample = () => {
   const [SearchTerm, setSearchTerm] = useState("");
@@ -8,23 +11,26 @@ const Sample = () => {
   const [blogs, setBlogs] = useState([]);
   const [videos, setVideos] = useState([]);
 
-  const [Onsearch, setOnsearch] = useState(false)
- 
+  const [Onsearch, setOnsearch] = useState(false);
+  const [SearchImg, setSearchImg] = useState(true)
+
+
   // State to hold original articles, blogs, and videos
   const [originalArticles, setOriginalArticles] = useState([]);
   const [originalBlogs, setOriginalBlogs] = useState([]);
   const [originalVideos, setOriginalVideos] = useState([]);
 
   const callFunc = async (SearchTerm) => {
+    setSearchImg(false)
     await getAllArticles(SearchTerm);
     await getAllBlogs(SearchTerm);
     await getAllVideos(SearchTerm);
-    setOnsearch(true)
+    setOnsearch(true);
+   
   };
 
   const getAllArticles = async (SearchTerm) => {
     try {
-  
       const url = `https://www.googleapis.com/customsearch/v1`;
       const params = {
         q: `${SearchTerm} + articles`,
@@ -34,18 +40,14 @@ const Sample = () => {
         siteSearch: "medium.com",
       };
       const response = await axios.get(url, { params });
-      
 
-      
-      setArticles(formatArticles(response?.data?.items))
-      
+      setArticles(formatArticles(response?.data?.items));
+
       setOriginalArticles(response?.data?.items);
-     // Save the original articles
-     
-        toast.success("Articles fetched Successfully");
-      
+      // Save the original articles
+
+      toast.success("Articles fetched Successfully");
     } catch (error) {
-      
       toast.error(error);
     }
   };
@@ -61,12 +63,11 @@ const Sample = () => {
         siteSearch: "medium.com",
       };
       const response = await axios.get(url, { params });
-   
+
       setBlogs(formatBlogs(response.data?.items)); // Set formatted blogs
       setOriginalBlogs(formatBlogs(response.data?.items));
-      toast.success("Blogs Fetched successfully") // Save the original blogs
+      toast.success("Blogs Fetched successfully"); // Save the original blogs
     } catch (error) {
-     
       toast.error(error);
     }
   };
@@ -74,41 +75,33 @@ const Sample = () => {
   const getAllVideos = async (SearchTerm) => {
     try {
       const response = await axios.get(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${SearchTerm}&type=video&key=${import.meta.env.VITE_API_KEY}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${SearchTerm}&type=video&key=${
+          import.meta.env.VITE_API_KEY
+        }`
       );
-  
+
       const formattedVideos = formatVideos(response.data?.items);
       setVideos(formattedVideos);
       setOriginalVideos(formattedVideos);
-      toast.success("Youtube Videos Fetched successfully") 
-      
+      toast.success("Youtube Videos Fetched successfully");
     } catch (error) {
-      toast.error(error)
-      
+      toast.error(error);
     }
-  // Save the original videos
-  
+    // Save the original videos
   };
 
   const formatArticles = (items) => {
-   
-
-   
-    return items.map(item => ({
-        
+    return items.map((item) => ({
       title: item.title,
       url: item.link,
       snippet: item.snippet,
       date: item.htmlSnippet?.split("<b>")[0], // Extract the date
       img: item.pagemap?.cse_image?.[0]?.src || "default-image-url.jpg",
-    }
-    )
-)
-      
+    }));
   };
 
   const formatBlogs = (items) => {
-    return items.map(item => ({
+    return items.map((item) => ({
       title: item.title,
       url: item.link,
       snippet: item.snippet,
@@ -118,7 +111,7 @@ const Sample = () => {
   };
 
   const formatVideos = (items) => {
-    return items.map(item => ({
+    return items.map((item) => ({
       url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
       img: item.snippet.thumbnails.medium.url,
       title: item.snippet.title,
@@ -127,21 +120,18 @@ const Sample = () => {
     }));
   };
 
-  const sortByDate = (items, setItems, originalItems, order = 'asc') => {
-    console.log(items,"items")
-   
+  const sortByDate = (items, setItems, originalItems, order = "asc") => {
+    console.log(items, "items");
+
     const sortedItems = [...items].sort((a, b) => {
-        
-    
       const dateA = new Date(a.date);
-      console.log(dateA , dateA)
+      console.log(dateA, dateA);
       const dateB = new Date(b.date);
-      return order === 'asc' ? dateA - dateB : dateB - dateA;
+      return order === "asc" ? dateA - dateB : dateB - dateA;
     });
-    console.log('sorted',sortedItems)
+    console.log("sorted", sortedItems);
     setItems(sortedItems); // Update state with sorted array
   };
-
 
   const resetItems = (setItems, originalItems) => {
     setItems(originalItems); // Reset to original state
@@ -149,47 +139,85 @@ const Sample = () => {
 
   return (
     <div>
-    <Toaster></Toaster>
-    
-      <div className="flex items-center justify-center gap-4 mt-6">
-        <input
-          type="text"
-          placeholder="Enter Keywords here"
-          value={SearchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border-gray-300 border-2 p-1 rounded-lg placeholder:text-black"
-        />
-        <button
-          className="bg-red-600 p-2 rounded-lg text-white"
-          onClick={() => callFunc(SearchTerm)}
-        >
-          Search
-        </button>
+      <Toaster></Toaster>
+      <h1 style={{ 
+        fontFamily: "Pacifico",}} className="text-orange-500 font-bold text-4xl p-4 mt-2">Artilog</h1>
+
+      <div className="flex flex-col items-center">
+      
+        <div className="flex md:flex-row flex-col items-center justify-center mt-4 gap-4">
+          <input
+            type="text"
+            placeholder="Search for Blogs,Articles here"
+            value={SearchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border-gray-300 border-2 p-1 rounded-lg placeholder:text-black  w-60 md:w-80 bg-slate-200 focus:outline-blue-700"
+          />
+          <button
+            className="bg-orange-500 p-2 rounded-lg text-white"
+            onClick={() => callFunc(SearchTerm)}
+          >
+            Search
+          </button>
+        </div>
+        {
+          SearchImg &&
+          <div className="mt-3">
+          <Lottie animationData={user} className="w-80"></Lottie>
+        </div>
+        }
+
+       
       </div>
 
       {/* Articles */}
       <div>
-        {
-          Onsearch && <>
-            <h1 className="text-4xl text-center text-orange-500 font-extrabold">Articles</h1>
-        <div className="flex md:flex-row flex-col gap-2 justify-between p-4">
-          <button onClick={() => sortByDate(articles, setArticles, originalArticles, 'asc')} className="bg-yellow-300 font-bold p-2 rounded-lg uppercase">Sort Articles Asc</button>
-          <button onClick={() => sortByDate(articles, setArticles, originalArticles, 'desc')} className="bg-yellow-300 font-bold p-2 rounded-lg uppercase">Sort Articles Desc</button>
-          <button onClick={() => resetItems(setArticles, originalArticles)} className="bg-gray-300 font-bold p-2 rounded-lg uppercase">Reset Articles</button>
-        </div>
-
+        {Onsearch && (
+          <>
+            <h1 className="text-4xl text-center text-orange-500 font-extrabold">
+              Articles
+            </h1>
+            <div className="flex md:flex-row flex-col gap-2 justify-between p-4">
+              <button
+                onClick={() =>
+                  sortByDate(articles, setArticles, originalArticles, "asc")
+                }
+                className="bg-orange-500 text-white italic font-bold p-2 rounded-lg uppercase"
+              >
+                Sort Articles Asc
+              </button>
+              <button
+                onClick={() =>
+                  sortByDate(articles, setArticles, originalArticles, "desc")
+                }
+                className="bg-orange-500 text-white italic font-bold p-2 rounded-lg uppercase"
+              >
+                Sort Articles Desc
+              </button>
+              <button
+                onClick={() => resetItems(setArticles, originalArticles)}
+                className="bg-gray-300 italic font-bold p-2 rounded-lg uppercase"
+              >
+                Reset Articles
+              </button>
+            </div>
           </>
-        }
-       
-      
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
           {articles.map((item, index) => {
-          
             return (
-              <a href={item.url} target="_blank" rel="noopener noreferrer" className="block w-full" key={index} data-aos="fade-left">
-                <div className="bg-slate-300 p-4 flex flex-col items-center justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[350px] h-[500px] mx-auto">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+                key={index}
+                data-aos="fade-left"
+              >
+                <div className="bg-slate-300 p-4 flex flex-col items-center justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[400px] h-[500px] mx-auto ">
                   {/* Image */}
-                  <div className="w-full h-[300px] flex items-center justify-center overflow-hidden rounded-md">
+                  <div className="w-full h-[300px] flex items-center justify-center overflow-hidden rounded-md ">
                     <img
                       src={item?.img}
                       alt="Article Image"
@@ -204,11 +232,20 @@ const Sample = () => {
 
                   {/* Description */}
                   <div className="p-2 flex-1 flex flex-col justify-between text-center">
-                    <p className="text-sm">by <span className="ml-1 italic text-green-600">{item.author}</span></p>
-                    <p className="text-base line-clamp-4 mt-2">{item.snippet}</p>
+                    <p className="text-sm">
+                      by{" "}
+                      <span className="ml-1 italic text-green-600">
+                        {item.author}
+                      </span>
+                    </p>
+                    <p className="text-base line-clamp-4 mt-2">
+                      {item.snippet}
+                    </p>
 
                     {/* Read more link */}
-                    <p className="text-blue-700 font-semibold mt-4">Click here to read more...</p>
+                    <p className="text-blue-700 font-semibold mt-4">
+                      Click here to read more...
+                    </p>
                   </div>
 
                   {/* Published Date */}
@@ -220,28 +257,54 @@ const Sample = () => {
             );
           })}
         </div>
-       
       </div>
 
       {/* Blogs */}
       <div>
-        {
-          Onsearch && <>
-            <h1 className="text-3xl text-center font-bold">Blogs</h1>
-        <div className="flex md:flex-row flex-col gap-2 justify-between p-4">
-          <button onClick={() => sortByDate(blogs, setBlogs, originalBlogs, 'asc')} className="bg-yellow-300 font-bold p-2 rounded-lg uppercase">Sort Blogs Asc</button>
-          <button onClick={() => sortByDate(blogs, setBlogs, originalBlogs, 'desc')} className="bg-yellow-300 font-bold p-2 rounded-lg uppercase">Sort Blogs Desc</button>
-          <button onClick={() => resetItems(setBlogs, originalBlogs)} className="bg-gray-300 font-bold p-2 rounded-lg uppercase">Reset Blogs</button>
-        </div>
-
+        {Onsearch && (
+          <>
+            <h1 className="text-4xl text-center font-extrabold text-orange-500">
+              Blogs
+            </h1>
+            <div className="flex md:flex-row flex-col gap-2 justify-between p-4">
+              <button
+                onClick={() =>
+                  sortByDate(blogs, setBlogs, originalBlogs, "asc")
+                }
+                className="bg-orange-500 text-white font-bold p-2 rounded-lg uppercase"
+              >
+                Sort Blogs Asc
+              </button>
+              <button
+                onClick={() =>
+                  sortByDate(blogs, setBlogs, originalBlogs, "desc")
+                }
+                className="bg-orange-500 text-white font-bold p-2 rounded-lg uppercase"
+              >
+                Sort Blogs Desc
+              </button>
+              <button
+                onClick={() => resetItems(setBlogs, originalBlogs)}
+                className="bg-gray-300 font-bold p-2 rounded-lg uppercase"
+              >
+                Reset Blogs
+              </button>
+            </div>
           </>
-        }
-      
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
           {blogs.map((blog, index) => {
             return (
-              <a href={blog.url} target="_blank" rel="noopener noreferrer" className="block w-full" key={index} data-aos="fade-left">
-                <div className="bg-slate-300 p-4 flex flex-col items-center mx-auto  justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[350px] h-[450px]">
+              <a
+                href={blog.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+                key={index}
+                data-aos="fade-left"
+              >
+                <div className="bg-slate-300 p-4 flex flex-col items-center mx-auto  justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[450px] h-[450px]">
                   {/* Image Container */}
                   <div className="flex items-center justify-center h-[250px] w-full overflow-hidden">
                     <img
@@ -252,7 +315,9 @@ const Sample = () => {
                   </div>
 
                   {/* Title */}
-                  <h1 className="font-bold text-blue-800 italic text-xl text-center mt-2">{blog.title}</h1>
+                  <h1 className="font-bold text-blue-800 italic text-xl text-center mt-2">
+                    {blog.title}
+                  </h1>
 
                   {/* Snippet */}
                   <div className="flex-1 mt-2">
@@ -268,27 +333,54 @@ const Sample = () => {
             );
           })}
         </div>
-       
       </div>
 
       {/* Videos */}
       <div>
-        {
-          Onsearch && <>
-             <h1 className="text-2xl text-center font-bold">Videos</h1>
-        <div className="flex md:flex-row flex-col gap-2 justify-between p-4">
-          <button onClick={() => sortByDate(videos, setVideos, originalVideos, 'asc')} className="bg-yellow-300 font-bold p-2 rounded-lg uppercase">Sort Videos Asc</button>
-          <button onClick={() => sortByDate(videos, setVideos, originalVideos, 'desc')} className="bg-yellow-300 font-bold p-2 rounded-lg uppercase">Sort Videos Desc</button>
-          <button onClick={() => resetItems(setVideos, originalVideos)} className="bg-gray-300 font-bold p-2 rounded-lg uppercase">Reset Videos</button>
-        </div>
+        {Onsearch && (
+          <>
+            <h1 className="text-4xl text-center font-extrabold text-orange-500">
+              Videos
+            </h1>
+            <div className="flex md:flex-row flex-col gap-2 justify-between p-4">
+              <button
+                onClick={() =>
+                  sortByDate(videos, setVideos, originalVideos, "asc")
+                }
+                className="bg-orange-500 text-white font-bold p-2 rounded-lg uppercase"
+              >
+                Sort Videos Asc
+              </button>
+              <button
+                onClick={() =>
+                  sortByDate(videos, setVideos, originalVideos, "desc")
+                }
+                className="bg-orange-500 text-white font-bold p-2 rounded-lg uppercase"
+              >
+                Sort Videos Desc
+              </button>
+              <button
+                onClick={() => resetItems(setVideos, originalVideos)}
+                className="bg-gray-300 font-bold p-2 rounded-lg uppercase"
+              >
+                Reset Videos
+              </button>
+            </div>
           </>
-        }
-     
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
           {videos.map((video, index) => {
             return (
-              <a href={video.url} target="_blank" rel="noopener noreferrer" className="block w-full" key={index} data-aos="fade-up">
-                <div className="bg-slate-300 p-4 flex flex-col mx-auto items-center justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[350px] h-[500px]">
+              <a
+                href={video.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+                key={index}
+                data-aos="fade-up"
+              >
+                <div className="bg-slate-300 p-4 flex flex-col mx-auto items-center justify-between rounded-md shadow-md hover:shadow-lg transition-shadow duration-300 ease-in-out max-w-[450px] h-[500px]">
                   {/* Image Container */}
                   <div className="flex items-center justify-center h-[200px] w-full overflow-hidden">
                     <img
@@ -299,7 +391,9 @@ const Sample = () => {
                   </div>
 
                   {/* Title */}
-                  <h1 className="font-bold text-blue-800 text-lg mt-2 text-center">{video.title}</h1>
+                  <h1 className="font-bold text-blue-800 text-lg mt-2 text-center">
+                    {video.title}
+                  </h1>
 
                   {/* Description */}
                   <div className="flex-1 mt-2">
@@ -315,7 +409,6 @@ const Sample = () => {
             );
           })}
         </div>
-      
       </div>
     </div>
   );
